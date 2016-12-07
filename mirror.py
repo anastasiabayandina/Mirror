@@ -68,17 +68,19 @@ class _StochasticOracle:
 		self.products_components = dict(zip(list_of_products, range(self.m)))
 
 	def answer(self):
-		c_ind = np.random.choice(range(self.n), size=1, p=(self.c - self.min_c)/sum(self.c - self.min_c))[0]
+		sum_c = sum(self.c - self.min_c)
+		c_ind = np.random.choice(range(self.n), size=1, p=((self.c - self.min_c)/sum_c))[0]
 		df = np.zeros(self.n)
-		df[c_ind] = 1
+		#df[c_ind] = 1
+		df[c_ind] = sum_c * self.c[c_ind]
 		g = self.products_set[-1] #max value in the constrains
 		ind_max = self.products_components[g] #index of max value in the constrains
 		a = self.A[ind_max] #vector a from A which gives the max
-		#print a/sum(a)
-		dg_ind = np.random.choice(range(self.n), size=1, p=a/sum(a))[0]
+		sum_a = sum(a)
+		dg_ind = np.random.choice(range(self.n), size=1, p=a/sum_a)[0]
 		dg = np.zeros(self.n)
-		dg[dg_ind] = 1
-		#print dg_ind
+		#dg[dg_ind] = 1
+		dg[dg_ind] = sum_a * a[dg_ind]
 		return df, dg, g, ind_max, c_ind, dg_ind
 
 	def update(self, x, changed_component):
@@ -200,6 +202,8 @@ class Mirror:
 		tr = {} #if trace
 		tr['objective'] = []
 		tr['constraints'] = []
+		tr['grad_objective'] = []
+		tr['grad_constraints'] = []
 		x = np.zeros(self.n)
 		if stochastic:
 			so = _StochasticOracle(self.c, self.A, self.b)
@@ -212,11 +216,15 @@ class Mirror:
 			if trace:
 				tr['objective'].append(self.objective(x))
 				tr['constraints'].append(g)
+				tr['grad_objective'].append(df)
+				tr['grad_constraints'].append(dg)
 			if g <= eps:
 				xI.append(x)
 				I += 1
 				x = x - hf * df
+				#print x
 				x[x < 0] = 0 #projection
+				#print x
 				if stochastic:
 					so.update(x, c_ind)
 			else:
