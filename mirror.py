@@ -20,7 +20,7 @@ class DataGenerator:
 			for i, ind in enumerate(ind_nonzero):
 				c[ind] = val_nonzero[i]
 		else:
-			c = np.random.uniform(size=self.n)
+			c = np.random.uniform(low=-5, high=5, size=self.n)
 		return c
 
 	def generate_A(self):
@@ -42,7 +42,7 @@ class DataGenerator:
 		return A
 
 	def generate_b(self):
-		b = np.random.uniform(low=-5, high=5, size=self.m)
+		b = np.random.uniform(low=0, high=5, size=self.m)
 		return b
 
 
@@ -111,7 +111,6 @@ class Mirror:
 		return np.dot(self.c, x)
 
 
-	#Should there be a minus?????
 	def dual(self, x):
 		return -np.dot(self.b, x)
 
@@ -155,11 +154,13 @@ class Mirror:
 				xI.append(x)
 				I += 1
 				x = x - hf * df
+				x[x < 0] = 0
 				if stochastic:
 					so.update(x, c_ind)
 			else:
 				J.append(ind_max)
 				x = x - hg * dg
+				x[x < 0] = 0
 				if stochastic:
 					so.update(x, dg_ind)
 			iter_count += 1
@@ -215,11 +216,13 @@ class Mirror:
 				xI.append(x)
 				I += 1
 				x = x - hf * df
+				x[x < 0] = 0 #projection
 				if stochastic:
 					so.update(x, c_ind)
 			else:
 				J.append(ind_max)
 				x = x - hg * dg
+				x[x < 0] = 0
 				if stochastic:
 					so.update(x, dg_ind)
 		try:
@@ -241,8 +244,6 @@ class Mirror:
 
 
 	def solve(self, eps=0.1, N_iter=None, stochastic=False, check_every=None, max_iter=100000, trace=False):
-		hf = eps / (self.Mf * self.Mg)
-		hg = eps / (self.Mg)**2
 		if N_iter is None:
 			return self._accuracy_solve(eps, stochastic, check_every, max_iter, trace)
 			
