@@ -167,6 +167,7 @@ class Mirror:
 					so.update(x, dg_ind)
 			iter_count += 1
 			if iter_count >= max_iter:
+				print 'norm(x) = ' + str(np.linalg.norm(x))
 				print 'Maximum number of iterations reached'
 				break
 			if iter_count % check_every == 0:
@@ -178,7 +179,7 @@ class Mirror:
 				for ind_max in J:
 					lam[ind_max] += 1
 				lam = lam * hg / (hf * I)
-				gap = abs(self.objective(xN) - self.dual(lam))
+				gap = self.objective(xN) - self.dual(lam)
 				tr['gap'].append(gap)
 		try:
 			xN = sum(xI) / I
